@@ -277,6 +277,23 @@ desired effect
                 </div>
                 <!-- /.box-header -->
                 <div class="box-body" v-if="timeoutList!=null">
+
+                    <div class="col-sm-2">
+                        <input type="search" class="form-control input-sm" placeholder="订单号查询"
+                               v-model="jobNo">
+                    </div>
+                    <div class="col-sm-2">
+                        <button type="button" class="btn btn-block btn-default btn-sm" @click="search">订单号查询</button>
+                    </div>
+
+                    <div class="col-sm-2">
+                        <input type="search" class="form-control input-sm" placeholder="料号查询"
+                               v-model="jobNoNH">
+                    </div>
+                    <div class="col-sm-2">
+                        <button type="button" class="btn btn-block btn-default btn-sm" @click="searchByNH">料号查询</button>
+                    </div>
+
                     <table id="example1" class="table table-bordered table-striped">
                         <thead>
                         <tr class="text-center">
@@ -467,25 +484,75 @@ desired effect
         el: '#form',
         data: {
             timeoutList: null,
-            my_loading:false
+            my_loading: false,
+            jobNo: '',
+            jobNoNH:'',
+            temp: null
         },
         methods: {
-            findTimeOut: function () {
+            findAll: function () {
+                this.status = false;
+                this.my_loading = true;
+                axios
+                    .get('/scdd/findByPK')
+                    .then(response => {
+                        this.timeoutList = response.data;
+                        this.temp = this.timeoutList;
+                        this.my_loading = false;
+                        this.status = true;
+                    })
+                    .catch(function (error) {
+                        console.log(error);
+                    })
+            },
+            //
+            searchByNH:function () {
+                console.log(this.jobNoNH);
+                if (this.jobNoNH === '') {
+                    this.timeoutList = null;
+                    this.findAll();
+                } else {
+                    let _search = this.jobNoNH.toLowerCase().trim();
+                    let newListData = []; // 用于存放搜索出来数据的新数组
+                    if (_search) {
+                        this.temp.filter(item => {
+                            if (item.料号.toLowerCase().indexOf(_search) !== -1) {
+                                newListData.push(item);
+                            }
+                        })
+                    }
+                    this.timeoutList = newListData;
+                    // console.log(‘新数组',newListData)
+                }
+            },
+            // 点击搜索订单号
+            search() {
+                // 支持模糊查询
+                // this.xmgcqkJsonsData：用于搜索的总数据
+                //　toLowerCase():用于把字符串转为小写，让模糊查询更加清晰
 
-            }
+                console.log(this.jobNo);
+                if (this.jobNo === '') {
+                    this.timeoutList = null;
+                    this.findAll();
+                } else {
+                    let _search = this.jobNo.toLowerCase().trim();
+                    let newListData = []; // 用于存放搜索出来数据的新数组
+                    if (_search) {
+                        this.temp.filter(item => {
+                            if (item.订单号.toLowerCase().indexOf(_search) !== -1) {
+                                newListData.push(item);
+                            }
+                        })
+                    }
+                    this.timeoutList = newListData;
+                    // console.log(‘新数组',newListData)
+                }
+
+            },
         },
-        mounted (){
-            this.my_loading = true;
-            axios
-                .get('/scdd/findByPK')
-                .then(response => {
-                    this.timeoutList = response.data;
-                    this.my_loading = false;
-                    console.log(this.timeoutList)
-                })
-                .catch(function (error) {
-                    console.log(error);
-                })
+        mounted() {
+            this.findAll();
         }
     })
 </script>
